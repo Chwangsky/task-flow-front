@@ -1,28 +1,22 @@
-"use client";
+// app/login/page.tsx
 
-import InputBox from "@/components/views/InputBox";
-import { ChangeEvent, useState } from "react";
+import { cookies } from "next/headers";
+import LoginClient from "./components/LoginClient";
 
-const Login = () => {
-  const [input, setInput] = useState<string>("");
+// This is a Server Component
+const LoginPage = () => {
+  // Retrieve cookies server-side
+  const cookieStore = cookies();
+  const accessToken = cookieStore.get("accessToken")?.value || null;
+  const refreshToken = cookieStore.get("refreshToken")?.value || null;
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  };
+  // Pass cookies as props to the Client Component
 
   return (
-    <div>
-      <div>Login in to Task Flow</div>
-      <InputBox
-        label="라벨"
-        placeholder="플레이스홀더"
-        type="text"
-        value="value"
-        onChange={handleChange}
-        error={false}
-      />
-    </div>
+    <>
+      <LoginClient accessToken={accessToken} refreshToken={refreshToken} />
+    </>
   );
 };
 
-export default Login;
+export default LoginPage;

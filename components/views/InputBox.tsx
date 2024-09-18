@@ -64,7 +64,14 @@ const InputBox = forwardRef<HTMLInputElement, Props>((props: Props, ref) => {
         />
         {onButtonClick !== undefined && (
           <div className="cursor-pointer" onClick={onButtonClick}>
-            {icon !== undefined && <div className={`icon ${icon}`}></div>}
+            {icon !== undefined && (
+              <div
+                className="icon bg-cover"
+                style={{
+                  backgroundImage: `url('/assets/image/${icon}.png')`,
+                }}
+              ></div>
+            )}
           </div>
         )}
       </div>
