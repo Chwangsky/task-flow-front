@@ -1,8 +1,15 @@
 "use client";
 import SignUpRequestDTO from "@/apis/dto/request/auth/sign-up.request.dto";
-import { ChangeEvent, useRef, useState } from "react";
+import SignUpResponseDto from "@/apis/dto/response/auth/sign-up.response.dto";
+import ResponseDTO from "@/apis/dto/ResponseDTO";
+import InputBox from "@/components/views/InputBox";
+import { Router, useRouter } from "next/router";
+import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { Address, useDaumPostcodePopup } from "react-daum-postcode";
 
-const SingUpClient = () => {
+const SignUpClient = () => {
+  const router = useRouter();
+
   //          state: 이메일 요소 참조 상태        //
   const emailRef = useRef<HTMLInputElement | null>(null);
   //          state: 패스워드 요소 참조 상태        //
@@ -90,7 +97,7 @@ const SingUpClient = () => {
 
   //          function: sign up response 처리 함수          //
   const signUpResponse = (
-    responseBody: SignUpResponseDTO | ResponseDTO | null
+    responseBody: SignUpResponseDto | ResponseDTO | null
   ) => {
     if (!responseBody) {
       alert("네트워크 이상입니다");
@@ -299,10 +306,10 @@ const SingUpClient = () => {
     setPage(2);
   };
 
-  //          event handler: 로그인 이벤트 클릭 이벤트 처리       //
-  const onSignInLinkClickHandler = () => {
-    setView("sign-in");
-  };
+  // //          event handler: 로그인 이벤트 클릭 이벤트 처리       //
+  // const onSignInLinkClickHandler = () => {
+  //   setView("sign-in");
+  // };
 
   //          event handler: 회원가입 버튼 클릭 이벤트 처리       //
   const onSignUpButtonClickHandler = () => {
@@ -359,7 +366,11 @@ const SingUpClient = () => {
       agreedPersonal,
     };
 
-    signUpRequest(requestBody).then(signUpResponse); // TODO //
+    // signUpRequest(requestBody).then(signUpResponse); // TODO
+  };
+
+  const onSignInLinkClickHandler = () => {
+    router.push("/signup");
   };
 
   //          render: sign up card 컴포넌트 렌더링        //
@@ -509,6 +520,7 @@ const SingUpClient = () => {
           <div className="auth-description-box">
             <div className="auth-description">
               {"이미 계정이 있으신가요?"}
+
               <span
                 className="auth-description-link"
                 onClick={onSignInLinkClickHandler}

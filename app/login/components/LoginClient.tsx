@@ -6,12 +6,14 @@ import LogInRequestDTO from "@/apis/dto/request/auth/log-in.request.dto";
 import LogInResponseDTO from "@/apis/dto/response/auth/log-in.response.dto";
 import ResponseDTO from "@/apis/dto/ResponseDTO";
 import { ChangeEvent, KeyboardEvent, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { MAIN_PATH } from "@/constant";
 import { GOOGLE_SIGN_IN_URL } from "@/apis/constant/urls";
+import loginRequest from "@/apis/auth";
 
-const LoginClient = ({ accessToken, refreshToken }) => {
+const LoginClient = () => {
+  const router = useRouter();
   const emailRef = useRef<HTMLInputElement | null>(null);
   const passwordRef = useRef<HTMLInputElement | null>(null);
 
@@ -27,8 +29,6 @@ const LoginClient = ({ accessToken, refreshToken }) => {
 
   const { setLoginUser, resetLoginUser } = useLoginUserStore();
 
-  const router = useRouter();
-
   const logInResponse = (
     responseBody: LogInResponseDTO | ResponseDTO | null
   ) => {
@@ -39,72 +39,73 @@ const LoginClient = ({ accessToken, refreshToken }) => {
 
     const { code } = responseBody;
     if (code === "DBE") alert("데이터베이스 오류입니다.");
-    if (code === "SF" || code === "VF") setError(true);
-    if (code !== "SU") return;
+    else if (code === "SF" || code === "VF") setError(true);
+    else if (code === "SU") {
+      const { accessToken, refreshToken, expirationTime } =
+        responseBody as LogInResponseDTO;
 
-    const { token, expirationTime } = responseBody as LogInResponseDTO;
+      const now = new Date().getTime();
+      const expires = new Date(now + expirationTime * 1000);
 
-    const now = new Date().getTime();
-    const expires = new Date(now + expirationTime * 1000);
+      // Use js-cookie to set client-side cookies
+      Cookies.set("accessToken", accessToken, { expires, secure: true });
+      Cookies.set("refreshToken", refreshToken, { expires, secure: true });
 
-    // js-cookie를 이용해서 client-side cookies set
-    Cookies.set("accessToken", token, { expires });
-    Cookies.set("refreshToken", token, { expires });
-    setLoginUser({
-      email,
-      nickname: "test",
-      profileImage: null,
-      isOAuth: false,
-      userId: 0,
-      isLogin: true,
-    });
-    router.push(MAIN_PATH());
+      setLoginUser({
+        email,
+        nickname: "test",
+        profileImage: null,
+        isOAuth: false,
+        userId: 0,
+        isLogin: true,
+      });
+
+      router.push(MAIN_PATH());
+    } else {
+      alert("알 수 없는 오류가 발생했습니다.");
+    }
   };
 
   const onEmailChangeHandler = (event: ChangeEvent<HTMLInputElement>) => {
     setError(false);
-    const { value } = event.target;
-    setEmail(value);
+    setEmail(event.target.value);
   };
 
   const onPasswordChangeHandler = (event: ChangeEvent<HTMLInputElement>) => {
     setError(false);
-    const { value } = event.target;
-    setPassword(value);
+    setPassword(event.target.value);
   };
 
   const onSignInButtonClickHandler = () => {
     const requestBody: LogInRequestDTO = { email, password };
-    logInRequest(requestBody).then(logInResponse);
-  };
-
-  const onSignUpLinkClickhandler = () => {
-    setView("sign-up"); // fix me
+    loginRequest(requestBody).then(logInResponse);
   };
 
   const onPasswordButtonClickHandler = () => {
-    if (passwordType === "text") {
-      setPasswordType("password");
-      setPasswordButtonIcon("eye-light-off-icon");
-    } else {
-      setPasswordType("text");
-      setPasswordButtonIcon("eye-light-on-icon");
-    }
+    setPasswordType((prevType) => (prevType === "text" ? "password" : "text"));
+    setPasswordButtonIcon((prevIcon) =>
+      prevIcon === "eye-light-on-icon"
+        ? "eye-light-off-icon"
+        : "eye-light-on-icon"
+    );
   };
 
   const onEmailKeyDownHandler = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-    if (!passwordRef.current) return;
-    passwordRef.current.focus();
+    if (event.key === "Enter") passwordRef.current?.focus();
   };
 
   const onPasswordKeyDownHandler = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") return;
-    onSignInButtonClickHandler();
+    if (event.key === "Enter") onSignInButtonClickHandler();
   };
 
   const onGoogleSignInButtonClickHandler = () => {
-    window.location.href = GOOGLE_SIGN_IN_URL();
+    const googleSignInUrl = GOOGLE_SIGN_IN_URL();
+    if (googleSignInUrl) window.location.href = googleSignInUrl;
+    else alert("Google Sign-In URL이 유효하지 않습니다.");
+  };
+
+  const onSignUpLinkClickhandler = () => {
+    router.push("/signup");
   };
 
   return (
